@@ -1,0 +1,93 @@
+version: "3.9"
+
+networks:
+  carrental_network:
+    driver: bridge
+
+volumes:
+  db_data:
+
+services:
+  db-service:
+    image: mysql:8.0
+    container_name: carrental_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: carrental_db
+      MYSQL_USER: carrental_user
+      MYSQL_PASSWORD: carrental_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - carrental_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: carrental_backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      APP_NAME: CarRental
+      APP_ENV: local
+      APP_KEY: base64:CHANGE_ME_RUN_PHP_ARTISAN_KEY_GENERATE=
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      LOG_CHANNEL: stack
+      DB_CONNECTION: mysql
+      DB_HOST: db-service
+      DB_PORT: 3306
+      DB_DATABASE: carrental_db
+      DB_USERNAME: carrental_user
+      DB_PASSWORD: carrental_pass
+      BROADCAST_DRIVER: log
+      CACHE_DRIVER: file
+      FILESYSTEM_DISK: local
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+      SESSION_LIFETIME: 120
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+    depends_on:
+      db-service:
+        condition: service_healthy
+    networks:
+      - carrental_network
+    command: >
+      sh -c "
+        composer install --no-interaction --prefer-dist &&
+        php artisan key:generate --force &&
+        php artisan migrate:fresh --seed --force &&
+        php artisan serve --host=0.0.0.0 --port=8000
+      "
+
+  frontend-service:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: carrental_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend-service
+    networks:
+      - carrental_network
+    command: npm run dev -- --host 0.0.0.0 --port 3000
