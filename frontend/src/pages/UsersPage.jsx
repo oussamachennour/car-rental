@@ -1,26 +1,17 @@
 import { useState, useEffect } from 'react'
 import { UserPlus, Edit2, Trash2, GraduationCap } from 'lucide-react'
-import axios from 'axios'
+import { api } from '../context/AppContext'
 import { useApp } from '../context/AppContext'
 import toast from 'react-hot-toast'
 
-// ✅ URL de base lue depuis la variable d'environnement Vite
-const BASE = import.meta.env.VITE_API_URL || 'https://backend-production.up.railway.app/api'
-
-// ✅ Helper : récupère le token Bearer depuis localStorage
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('token')}`,
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-})
-
 export default function UsersPage() {
-  const { isManager, user: currentUser } = useApp()
+  const { isManager, user: currentUser } = useApp() 
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'client', is_student: false, password: '' })
+
 
   useEffect(() => {
     fetchUsers()
@@ -28,7 +19,7 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${BASE}/users`, { headers: authHeaders() })
+      const res = await api.get('/users')
       setUsers(res.data.data || res.data)
     } catch (error) {
       toast.error('Failed to load users')
@@ -40,10 +31,10 @@ export default function UsersPage() {
   const handleSave = async () => {
     try {
       if (editingUser) {
-        await axios.put(`${BASE}/users/${editingUser.id}`, form, { headers: authHeaders() })
+        await api.put(`/users/${editingUser.id}`, form)
         toast.success('User updated')
       } else {
-        await axios.post(`${BASE}/users`, form, { headers: authHeaders() })
+        await api.post('/users', form)
         toast.success('User created')
       }
       setShowModal(false)
@@ -62,7 +53,7 @@ export default function UsersPage() {
     }
     if (window.confirm(`Delete ${user.name}?`)) {
       try {
-        await axios.delete(`${BASE}/users/${user.id}`, { headers: authHeaders() })
+        await api.delete(`/users/${user.id}`)
         toast.success('User deleted')
         fetchUsers()
       } catch (error) {
@@ -133,6 +124,7 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowModal(false)}>
           <div className="bg-white dark:bg-stone-900 rounded-xl w-full max-w-md border border-stone-200 dark:border-stone-800 shadow-xl" onClick={e => e.stopPropagation()}>

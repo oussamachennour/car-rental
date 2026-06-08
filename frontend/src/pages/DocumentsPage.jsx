@@ -11,7 +11,7 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://backend-production.up.railway.app/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 // Storage URL: Laravel serves public storage at /storage/...
 function storageUrl(path) {
   const base = API_BASE.replace('/api', '')
