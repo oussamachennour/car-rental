@@ -38,10 +38,10 @@ services:
     working_dir: /var/www/html
     environment:
       APP_NAME: CarRental
-      APP_ENV: local
-      APP_KEY: base64:CHANGE_ME_RUN_PHP_ARTISAN_KEY_GENERATE=
-      APP_DEBUG: "true"
-      APP_URL: http://localhost:8000
+      APP_ENV: production
+      APP_KEY: base64:xxxxx
+      APP_DEBUG: "false"
+      APP_URL: https://car-rental-production.up.railway.app
       LOG_CHANNEL: stack
       DB_CONNECTION: mysql
       DB_HOST: db-service
@@ -66,12 +66,11 @@ services:
     networks:
       - carrental_network
     command: >
-      sh -c "
+        sh -c "
         composer install --no-interaction --prefer-dist &&
-        php artisan key:generate --force &&
-        php artisan migrate:fresh --seed --force &&
-        php artisan serve --host=0.0.0.0 --port=8000
-      "
+        php artisan storage:link || true &&
+        php artisan migrate --force &&
+        php artisan serve --host=0.0.0.0 --port=8000"
 
   frontend-service:
     build:
@@ -80,7 +79,7 @@ services:
     container_name: carrental_frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://localhost:8000/api
+      VITE_API_URL: https://backend-production.up.railway.app/api
     ports:
       - "3000:3000"
     volumes:

@@ -4,6 +4,14 @@ import { api } from '../context/AppContext'
 import { useApp } from '../context/AppContext'
 import toast from 'react-hot-toast'
 
+const BASE = import.meta.env.VITE_API_URL || 'https://backend-production.up.railway.app/api'
+ 
+const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token')}`,
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+})
+
 export default function ReservationsPage() {
   const { isManager } = useApp()
   const [bookings, setBookings] = useState([])

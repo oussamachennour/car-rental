@@ -1,48 +1,42 @@
 /**
  * frontend/src/utils/uploadDocument.js
- *
- * Helper dédié pour l'upload de fichiers vers POST /api/documents.
- *
- * Pourquoi ce fichier existe :
- * L'instance `api` dans AppContext a un header global `Content-Type: application/json`.
- * Pour un upload de fichier, il faut `multipart/form-data`. Si on utilise api.post()
- * sans override, axios envoie "[object FormData]" en JSON → 422 côté Laravel.
- * En passant `Content-Type: undefined`, on laisse axios générer automatiquement
- * le bon `multipart/form-data; boundary=...`.
  */
 
-import { api } from '../context/AppContext'
+import axios from 'axios'
+
+const BASE = import.meta.env.VITE_API_URL || ' https://backend-production.up.railway.app/api'
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token')}`,
+  Accept: 'application/json',
+  // Content-Type intentionally omitted — let axios set multipart/form-data with boundary
+})
 
 /**
  * Upload un document vers le backend.
- *
- * @param {File}   file  - Objet File provenant d'un <input type="file"> ou drag-and-drop
+ * @param {File}   file  - Fichier (input ou drag-and-drop)
  * @param {string} type  - 'drivers_license' | 'passport' | 'id_card' | 'proof_of_address'
- * @returns {Promise<object>} L'objet document retourné par l'API
- * @throws Si la requête échoue (422, 500, etc.)
+ * @returns {Promise<object>} Document créé
  */
 export async function uploadDocument(file, type) {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('type', type)
-  // Ne pas append user_id — le backend le lit depuis $request->user() (token Sanctum)
+  // user_id non requis — le backend le lit depuis $request->user()
 
-  const res = await api.post('/documents', formData, {
-    headers: {
-      // undefined permet à axios de générer le bon boundary multipart automatiquement
-      'Content-Type': undefined,
-    },
+  const res = await axios.post(`${BASE}/documents`, formData, {
+    headers: authHeaders(),
   })
 
   return res.data.data || res.data
 }
 
 /**
- * Supprimer un document via DELETE /api/documents/{id}
- *
+ * Supprimer un document.
  * @param {number} documentId
- * @returns {Promise<void>}
  */
 export async function deleteDocument(documentId) {
-  await api.delete(`/documents/${documentId}`)
+  await axios.delete(`${BASE}/documents/${documentId}`, {
+    headers: authHeaders(),
+  })
 }
