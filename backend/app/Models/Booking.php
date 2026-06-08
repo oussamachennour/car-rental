@@ -25,8 +25,10 @@ class Booking extends Model
     ];
 
     protected $casts = [
-        'pickup_date'     => 'date',
-        'return_date'     => 'date',
+        // ✅ 'date' (sans 'datetime') sérialise en Y-m-d dans le JSON
+        //    Au lieu de '2026-06-03T00:00:00.000000Z', on obtient '2026-06-03'
+        'pickup_date'     => 'date:Y-m-d',
+        'return_date'     => 'date:Y-m-d',
         'cancelled_at'    => 'datetime',
         'total_price'     => 'float',
         'discount_amount' => 'float',
@@ -69,7 +71,6 @@ class Booking extends Model
         if ($this->status !== 'active') {
             return false;
         }
-        // Must cancel at least 24 hours before pickup
         return now()->diffInHours($this->pickup_date, false) > 24;
     }
 

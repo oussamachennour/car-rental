@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage'
 import UsersPage from './pages/UsersPage'
 import ReservationsPage from './pages/ReservationsPage'
 import CarsManagementPage from './pages/CarsManagementPage'
+import DocumentsPage from './pages/DocumentsPage'  // ✅ Added
 
 function AppLayout() {
   return (
@@ -38,7 +39,7 @@ function AppLayout() {
               <DashboardPage />
             </PrivateRoute>
           } />
-           <Route path="/users" element={
+          <Route path="/users" element={
             <PrivateRoute requireManager>
               <UsersPage />
             </PrivateRoute>
@@ -51,6 +52,12 @@ function AppLayout() {
           <Route path="/cars" element={
             <PrivateRoute requireManager>
               <CarsManagementPage />
+            </PrivateRoute>
+          } />
+          {/* ✅ Documents route — manager only */}
+          <Route path="/documents" element={
+            <PrivateRoute requireManager>
+              <DocumentsPage />
             </PrivateRoute>
           } />
         </Routes>

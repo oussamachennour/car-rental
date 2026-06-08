@@ -8,7 +8,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DocumentController;
-use Illuminate\Support\Facades\Hash;
 
 // ─── CORS preflight ───────────────────────────────────────────────────────────
 Route::options('{any}', function () {
@@ -28,11 +27,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-// ─── Cars (public read, no auth needed) ───────────────────────────────────────
+// ─── Cars (public read) ───────────────────────────────────────────────────────
 Route::get('/cars', [CarController::class, 'index']);
 Route::get('/cars/{id}', [CarController::class, 'show']);
 
-// Cars write → protected
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cars', [CarController::class, 'store']);
     Route::put('/cars/{id}', [CarController::class, 'update']);
@@ -41,9 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
-// ALL booking routes protected → $request->user() is always available
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/bookings', [BookingController::class, 'index']);   // manager=all, client=own
+    Route::get('/bookings', [BookingController::class, 'index']);
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
@@ -56,7 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
     Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::put('/users/profile', [UserController::class, 'updateProfile']);  // avant {id} !
+    Route::put('/users/profile', [UserController::class, 'updateProfile']); // before {id} !
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
 });
@@ -65,8 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications', [NotificationController::class, 'store']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']); // before {id}!
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
-    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::delete('/notifications', [NotificationController::class, 'clearAll']);
 });
 
@@ -74,6 +71,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/documents', [DocumentController::class, 'index']);
     Route::post('/documents', [DocumentController::class, 'store']);
+    // ✅ Added: verify and reject routes (were missing)
+    Route::patch('/documents/{id}/verify', [DocumentController::class, 'verify']);
+    Route::patch('/documents/{id}/reject', [DocumentController::class, 'reject']);
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);
 });
 
@@ -83,14 +83,28 @@ Route::middleware('auth:sanctum')->get('/analytics', function () {
     $cars     = \App\Models\Car::all();
     $users    = \App\Models\User::all();
 
+    // ✅ Added: monthly breakdown for the dashboard chart (last 12 months)
+    $monthlyRevenue = \App\Models\Booking::selectRaw(
+            "DATE_FORMAT(created_at, '%Y-%m') as month,
+             SUM(total_price) as revenue,
+             COUNT(*) as bookings"
+        )
+        ->where('status', '!=', 'cancelled')
+        ->where('created_at', '>=', now()->subMonths(12))
+        ->groupBy('month')
+        ->orderBy('month')
+        ->get();
+
     return response()->json([
-        'active_rentals'   => $bookings->where('status', 'active')->count(),
-        'monthly_revenue'  => $bookings->where('status', '!=', 'cancelled')->sum('total_price'),
-        'total_cars'       => $cars->count(),
-        'available_cars'   => $cars->where('status', 'available')->count(),
-        'total_clients'    => $users->where('role', 'client')->count(),
-        'fleet_utilization'=> $cars->count() > 0
+        'active_rentals'    => $bookings->where('status', 'active')->count(),
+        'monthly_revenue'   => $bookings->where('status', '!=', 'cancelled')->sum('total_price'),
+        'total_cars'        => $cars->count(),
+        'available_cars'    => $cars->where('status', 'available')->count(),
+        'total_clients'     => $users->where('role', 'client')->count(),
+        'fleet_utilization' => $cars->count() > 0
             ? round(($cars->where('status', '!=', 'available')->count() / $cars->count()) * 100)
             : 0,
+        // ✅ Monthly chart data for the dashboard
+        'monthly_data'      => $monthlyRevenue,
     ]);
 });

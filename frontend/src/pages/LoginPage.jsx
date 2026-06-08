@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { useApp } from '../context/AppContext'  // 🔥 useApp بدل useAuth
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useApp } from '../context/AppContext'
 import { Car, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useApp()  // 🔥 useApp بدل useAuth
+  const { login, t, lang } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
@@ -18,12 +18,11 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
       await login(email, password)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password')
+      setError(err.response?.data?.message || t.login.error)
     } finally {
       setLoading(false)
     }
@@ -36,8 +35,9 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Car size={32} className="text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-stone-900 dark:text-stone-100">Welcome Back</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">Sign in to book your dream car</p>
+          {/* ✅ Traduit */}
+          <h2 className="text-2xl font-bold text-stone-900 dark:text-stone-100">{t.login.title}</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t.login.subtitle}</p>
         </div>
 
         {error && (
@@ -48,7 +48,8 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Email</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.login.email}</label>
             <input
               type="email"
               value={email}
@@ -58,9 +59,9 @@ export default function LoginPage() {
               required
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Password</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.login.password}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -70,36 +71,31 @@ export default function LoginPage() {
                 placeholder="••••••••"
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-              >
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-          >
+          {/* ✅ Traduit */}
+          <button type="submit" disabled={loading} className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Signing in...
+                {t.login.submitting}
               </span>
-            ) : (
-              'Sign In'
-            )}
+            ) : t.login.submit}
           </button>
         </form>
 
-        <div className="mt-6 pt-4 border-t border-stone-200 dark:border-stone-800">
-          <p className="text-xs text-stone-400 text-center mb-2">Demo Credentials:</p>
-          <div className="flex justify-center gap-4 text-xs text-stone-500">
-          </div>
+        <div className="mt-6 pt-4 border-t border-stone-200 dark:border-stone-800 text-center">
+          {/* ✅ Traduit */}
+          <p className="text-sm text-stone-500">
+            {t.register.already}{' '}
+            <Link to="/register" className="text-orange-600 hover:underline">
+              {t.nav.sign_up}
+            </Link>
+          </p>
         </div>
       </div>
     </div>

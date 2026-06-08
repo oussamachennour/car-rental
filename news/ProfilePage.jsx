@@ -1,4 +1,4 @@
-import { uploadDocument, deleteDocument } from "./uploadDocument"
+import { uploadDocument, deleteDocument } from '../utils/uploadDocument'
 import React, { useState, useRef, useEffect } from 'react'
 import { User, Camera, Lock, FileText, Upload, CheckCircle2, Eye, EyeOff, Trash2, AlertCircle } from 'lucide-react'
 import { useApp, api } from '../context/AppContext'

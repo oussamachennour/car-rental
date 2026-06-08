@@ -1,62 +1,47 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { api } from '../context/AppContext'
 import { Car, Eye, EyeOff, User, Mail, Phone } from 'lucide-react'
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ 
-    name: '', 
-    email: '', 
-    phone: '', 
-    password: '', 
-    password_confirmation: '' 
-  })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', password_confirmation: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useApp()
+  const { login, t } = useApp()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
-    if (form.password !== form.password_confirmation) {
-      setError('Passwords do not match')
-      return
-    }
-    
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
-    
-    setLoading(true)
 
+    // ✅ Erreurs traduites
+    if (form.password !== form.password_confirmation) {
+      setError(t.register.pw_mismatch)
+      return
+    }
+    if (form.password.length < 6) {
+      setError(t.register.pw_min)
+      return
+    }
+
+    setLoading(true)
     try {
-      const res = await fetch('http://localhost:8000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          password: form.password,
-        })
+      // ✅ Utilise l'instance api configurée (avec baseURL) au lieu de fetch hardcodé
+      const res = await api.post('/register', {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
       })
-      
-      const data = await res.json()
-      
-      if (!res.ok) {
-        throw new Error(data.message || 'Registration failed')
-      }
-      
-      // Auto-login après inscription
+
+      if (!res.data) throw new Error(t.register.failed)
+
       await login(form.email, form.password)
       navigate('/')
-      
     } catch (err) {
-      setError(err.message)
+      setError(err.response?.data?.message || err.message || t.register.failed)
     } finally {
       setLoading(false)
     }
@@ -69,8 +54,9 @@ export default function RegisterPage() {
           <div className="w-16 h-16 bg-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Car size={32} className="text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-stone-900 dark:text-stone-100">Create Account</h2>
-          <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">Join CarRent to book your dream car</p>
+          {/* ✅ Traduit */}
+          <h2 className="text-2xl font-bold text-stone-900 dark:text-stone-100">{t.register.title}</h2>
+          <p className="text-stone-500 dark:text-stone-400 text-sm mt-1">{t.register.subtitle}</p>
         </div>
 
         {error && (
@@ -81,7 +67,8 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Full Name</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.register.full_name}</label>
             <div className="relative">
               <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
               <input
@@ -96,7 +83,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Email</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.register.email}</label>
             <div className="relative">
               <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
               <input
@@ -111,7 +99,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Phone (optional)</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.register.phone}</label>
             <div className="relative">
               <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
               <input
@@ -125,7 +114,8 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Password</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.register.password}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -135,18 +125,15 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-              >
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Confirm Password</label>
+            {/* ✅ Traduit */}
+            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">{t.register.confirm_password}</label>
             <input
               type="password"
               value={form.password_confirmation}
@@ -157,27 +144,23 @@ export default function RegisterPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-          >
+          {/* ✅ Traduit */}
+          <button type="submit" disabled={loading} className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50">
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Creating account...
+                {t.register.submitting}
               </span>
-            ) : (
-              'Create Account'
-            )}
+            ) : t.register.submit}
           </button>
         </form>
 
         <div className="mt-6 pt-4 border-t border-stone-200 dark:border-stone-800 text-center">
+          {/* ✅ Traduit */}
           <p className="text-sm text-stone-500">
-            Already have an account?{' '}
+            {t.register.already}{' '}
             <Link to="/login" className="text-orange-600 hover:underline">
-              Sign In
+              {t.register.sign_in}
             </Link>
           </p>
         </div>

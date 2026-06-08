@@ -26,7 +26,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // ✅ Fix: Only redirect to /login on 401 if NOT on a public auth route.
+    // This prevents the page from reloading when the user types wrong credentials.
+    const url = error.config?.url || ''
+    const isAuthRoute = url.includes('/login') || url.includes('/register')
+
+    if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
@@ -49,6 +54,25 @@ const translations = {
       reservations: 'Reservations',
       fleet_mgmt: 'Fleet Mgmt',
       logout: 'Logout',
+      sign_up: 'Sign Up',
+      today: 'today',
+      this_week: 'this week',
+      last_month: 'vs last month',
+      yoy: 'YoY',
+      available_sub: 'available',
+      car_col: 'Car',
+      status_col: 'Status',
+      price_col: 'Price',
+      toggle_col: 'Toggle',
+      booking_confirmed: 'Booking confirmed!',
+      confirmed_num: 'confirmed',
+      auto: 'Auto',
+      manual_short: 'Manual',
+      student_badge: 'Student',
+      available_badge: '● Available',
+      rented_badge: '● Rented',
+      to_label: 'to',
+      reviews_label: 'reviews',
     },
     home: {
       hero_title: 'Drive the Car You Deserve',
@@ -228,36 +252,26 @@ const translations = {
       edit_car: 'Edit Car',
       add_car: 'Add New Car',
       search: 'Search by make, model, or year...',
-      all_categories: 'All Categories',
-      economy: 'Economy',
-      suv: 'SUV',
-      luxury: 'Luxury',
-      no_cars: 'No cars found',
-      loading: 'Loading...',
-      seats: 'Seats',
-      type: 'Type',
-      fuel: 'Fuel',
-      category: 'Category',
-      make: 'Make (e.g., BMW)',
-      model: 'Model (e.g., 5 Series)',
-      year: 'Year',
-      price: 'Price per day (€)',
-      status: 'Status',
+      all_status: 'All Status',
       available: 'Available',
+      rented: 'Rented',
+      maintenance: 'Maintenance',
       unavailable: 'Unavailable',
-      num_seats: 'Number of Seats',
+      make: 'Make',
+      model: 'Model',
+      year: 'Year',
+      category: 'Category',
+      price_per_day: 'Price / Day',
+      seats: 'Seats',
       transmission: 'Transmission',
-      automatic: 'Automatic',
-      manual: 'Manual',
       fuel_type: 'Fuel Type',
-      petrol: 'Petrol',
-      diesel: 'Diesel',
-      hybrid: 'Hybrid',
-      electric: 'Electric',
-      rating: 'Rating (0-5)',
+      status: 'Status',
+      student_friendly: 'Student Friendly',
       image_url: 'Image URL',
-      num_reviews: 'Number of Reviews',
-      student_friendly: 'Student friendly (eligible for 30% discount)',
+      description: 'Description',
+      color: 'Color',
+      license_plate: 'License Plate',
+      mileage: 'Mileage',
       update: 'Update',
       create: 'Create',
       cancel: 'Cancel',
@@ -266,23 +280,23 @@ const translations = {
       deleted: 'Car deleted',
       failed_load: 'Failed to load cars',
       failed_delete: 'Failed to delete car',
-      fill_required: 'Please fill in all required fields',
+      fill_required: 'Please fill all required fields',
       delete_confirm: 'Delete ',
       access_denied: 'Access denied. Manager only.',
     },
     login: {
       title: 'Welcome Back',
-      subtitle: 'Sign in to book your dream car',
+      subtitle: 'Sign in to book your car',
       email: 'Email',
       password: 'Password',
       submit: 'Sign In',
       submitting: 'Signing in...',
       error: 'Invalid email or password',
-      demo: 'Demo Credentials:',
+      demo: 'Demo credentials:',
     },
     register: {
       title: 'Create Account',
-      subtitle: 'Join CarRent to book your dream car',
+      subtitle: 'Join CarRent to start booking',
       full_name: 'Full Name',
       email: 'Email',
       phone: 'Phone (optional)',
@@ -303,10 +317,9 @@ const translations = {
       close: 'Close',
       confirm: 'Confirm',
       per_day: '/day',
-      error_occurred: 'Something went wrong',
+      error_occurred: 'An error occurred',
     },
   },
-
   fr: {
     nav: {
       home: 'Accueil',
@@ -320,28 +333,47 @@ const translations = {
       reservations: 'Réservations',
       fleet_mgmt: 'Gestion Flotte',
       logout: 'Déconnexion',
+      sign_up: 'S\'inscrire',
+      today: 'aujourd\'hui',
+      this_week: 'cette semaine',
+      last_month: 'vs mois dernier',
+      yoy: 'annuel',
+      available_sub: 'disponible',
+      car_col: 'Voiture',
+      status_col: 'Statut',
+      price_col: 'Prix',
+      toggle_col: 'Modifier',
+      booking_confirmed: 'Réservation confirmée!',
+      confirmed_num: 'confirmé',
+      auto: 'Auto',
+      manual_short: 'Manuelle',
+      student_badge: 'Étudiant',
+      available_badge: '● Disponible',
+      rented_badge: '● Loué',
+      to_label: 'au',
+      reviews_label: 'avis',
     },
     home: {
-      hero_title: 'Conduisez la Voiture de Vos Rêves',
-      hero_subtitle: 'Locations premium pour chaque voyage — trajets urbains ou aventures longue distance.',
+      hero_title: 'Conduisez la Voiture que Vous Méritez',
+      hero_subtitle: 'Locations premium pour chaque trajet — des trajets urbains aux aventures transcontinentales.',
       hero_cta: 'Voir la Flotte',
-      hero_cta2: 'Offres Spéciales',
+      hero_cta2: 'Voir les Offres',
       why_title: 'Pourquoi Choisir CarRent?',
       feat1_title: 'Réservation Instantanée',
-      feat1_desc: 'Réservez votre voiture en moins de 2 minutes.',
-      feat2_title: 'Remises Étudiantes',
-      feat2_desc: "Jusqu'à 30% de réduction pour les étudiants.",
+      feat1_desc: 'Réservez votre voiture en moins de 2 minutes avec disponibilité en temps réel.',
+      feat2_title: 'Réductions Étudiantes',
+      feat2_desc: "Jusqu'à 30% de réduction pour les étudiants et les conducteurs soucieux de leur budget.",
       feat3_title: 'Annulation Gratuite',
-      feat3_desc: "Annulez jusqu'à 24h avant sans frais.",
+      feat3_desc: "Annulez jusqu'à 24h avant la prise en charge sans frais.",
       feat4_title: 'GPS & Assurance',
-      feat4_desc: 'Couverture complète et navigation incluses.',
+      feat4_desc: 'Couverture complète et navigation incluses dans chaque location.',
       popular_title: 'Populaires Cette Semaine',
-      ai_title: 'Vous hésitez?',
-      ai_subtitle: 'Demandez à notre assistant IA des recommandations personnalisées.',
+      ai_title: 'Pas sûr de votre choix?',
+      ai_subtitle: "Demandez à notre assistant IA des recommandations personnalisées.",
     },
     fleet: {
       title: 'Notre Flotte',
-      subtitle: 'Trouvez le véhicule parfait pour votre voyage',
+      subtitle: 'Trouvez le véhicule parfait pour votre trajet',
       filter_all: 'Toutes les Voitures',
       filter_student: 'Étudiant / Économique',
       filter_suv: 'SUVs',
@@ -366,7 +398,7 @@ const translations = {
       price: 'Total Estimé',
       submit: 'Confirmer la Réservation',
       cancel: 'Annuler',
-      discount: 'Remise Étudiant Appliquée',
+      discount: 'Réduction Étudiant Appliquée',
       success: 'Réservation confirmée!',
       base_price: 'Prix de base',
     },
@@ -375,9 +407,9 @@ const translations = {
       name: 'Nom Complet',
       email: 'Adresse Email',
       phone: 'Téléphone',
-      save: 'Sauvegarder',
-      saving: 'Sauvegarde…',
-      saved: 'Sauvegardé!',
+      save: 'Enregistrer',
+      saving: 'Enregistrement…',
+      saved: 'Enregistré!',
       password_title: 'Changer le Mot de Passe',
       current_pw: 'Mot de Passe Actuel',
       new_pw: 'Nouveau Mot de Passe',
@@ -385,15 +417,15 @@ const translations = {
       update_pw: 'Mettre à Jour',
       updating: 'Mise à jour…',
       updated: 'Mis à jour!',
-      upload_avatar: 'Changer la Photo',
+      upload_avatar: 'Télécharger Avatar',
       docs_title: 'Mes Documents',
       upload_license: 'Télécharger Permis de Conduire',
-      drop_here: 'Déposez votre fichier ici ou cliquez pour parcourir',
-      file_types: "PDF, JPG, PNG jusqu'à 10 Mo",
+      drop_here: 'Déposez votre fichier ici, ou cliquez pour parcourir',
+      file_types: 'PDF, JPG, PNG jusqu\'à 10 Mo',
       uploading: 'Téléchargement…',
       uploaded_docs: 'Documents Téléchargés',
       verified: 'Vérifié',
-      pending: 'En attente',
+      pending: 'En Attente',
       pw_mismatch: 'Les mots de passe ne correspondent pas',
       pw_min: 'Minimum 8 caractères',
     },
@@ -406,28 +438,28 @@ const translations = {
       cancel_btn: 'Annuler la Réservation',
       cancel_confirm: 'Êtes-vous sûr de vouloir annuler?',
       no_bookings: 'Aucune réservation.',
-      cannot_cancel: 'Annulation impossible — moins de 24h avant le retrait',
+      cannot_cancel: 'Impossible d\'annuler — la prise en charge est dans moins de 24h',
       total: 'Total',
       booking_num: 'Réservation #',
       confirm: 'Confirmer',
     },
     admin: {
-      title: 'Tableau de Bord Gérant',
+      title: 'Tableau de Bord',
       total_rentals: 'Locations Actives',
       revenue: 'Revenus Mensuels',
-      fleet_util: 'Utilisation de la Flotte',
+      fleet_util: 'Utilisation Flotte',
       notifications: 'Notifications',
-      fleet_mgmt: 'Gestion de la Flotte',
+      fleet_mgmt: 'Gestion Flotte',
       mark_available: 'Rendre Disponible',
       mark_unavailable: 'Rendre Indisponible',
       clear_all: 'Tout Effacer',
-      no_notifications: 'Aucune notification',
+      no_notifications: 'Pas de notifications',
       live: 'En direct',
       monthly_revenue: 'Revenus Mensuels',
-      last_12: '12 derniers mois',
+      last_12: 'Les 12 derniers mois',
       total_clients: 'Total Clients',
-      rented: 'Louées',
-      available: 'Disponibles',
+      rented: 'Loué',
+      available: 'Disponible',
       maintenance: 'Maintenance',
     },
     reservations: {
@@ -450,8 +482,8 @@ const translations = {
       price: 'Prix',
       status: 'Statut',
       actions: 'Actions',
-      select_user: 'Sélectionner un utilisateur',
-      select_car: 'Sélectionner une voiture',
+      select_user: 'Sélectionner Utilisateur',
+      select_car: 'Sélectionner Voiture',
       total_price: 'Prix Total',
       save: 'Enregistrer',
       cancel: 'Annuler',
@@ -466,8 +498,8 @@ const translations = {
     },
     users: {
       title: 'Gestion des Utilisateurs',
-      add: 'Ajouter un Utilisateur',
-      edit: 'Modifier l\'Utilisateur',
+      add: 'Ajouter Utilisateur',
+      edit: 'Modifier Utilisateur',
       user_col: 'Utilisateur',
       contact: 'Contact',
       role: 'Rôle',
@@ -486,7 +518,7 @@ const translations = {
       created: 'Utilisateur créé',
       deleted: 'Utilisateur supprimé',
       cannot_delete_self: 'Vous ne pouvez pas vous supprimer',
-      failed_load: 'Erreur de chargement',
+      failed_load: 'Erreur de chargement des utilisateurs',
       failed_delete: 'Erreur de suppression',
       access_denied: 'Accès refusé. Gérants uniquement.',
       delete_confirm: 'Supprimer ',
@@ -495,40 +527,30 @@ const translations = {
     cars_mgmt: {
       title: 'Gestion de la Flotte',
       vehicles: 'véhicules',
-      add: 'Ajouter une Voiture',
-      edit_car: 'Modifier la Voiture',
-      add_car: 'Ajouter une Nouvelle Voiture',
+      add: 'Ajouter Voiture',
+      edit_car: 'Modifier Voiture',
+      add_car: 'Ajouter Nouvelle Voiture',
       search: 'Rechercher par marque, modèle ou année...',
-      all_categories: 'Toutes les Catégories',
-      economy: 'Économique',
-      suv: 'SUV',
-      luxury: 'Luxe',
-      no_cars: 'Aucune voiture trouvée',
-      loading: 'Chargement...',
-      seats: 'Places',
-      type: 'Type',
-      fuel: 'Carburant',
-      category: 'Catégorie',
-      make: 'Marque (ex: BMW)',
-      model: 'Modèle (ex: Série 5)',
-      year: 'Année',
-      price: 'Prix par jour (€)',
-      status: 'Statut',
+      all_status: 'Tous les Statuts',
       available: 'Disponible',
+      rented: 'Loué',
+      maintenance: 'Maintenance',
       unavailable: 'Indisponible',
-      num_seats: 'Nombre de Places',
+      make: 'Marque',
+      model: 'Modèle',
+      year: 'Année',
+      category: 'Catégorie',
+      price_per_day: 'Prix / Jour',
+      seats: 'Places',
       transmission: 'Transmission',
-      automatic: 'Automatique',
-      manual: 'Manuelle',
       fuel_type: 'Type de Carburant',
-      petrol: 'Essence',
-      diesel: 'Diesel',
-      hybrid: 'Hybride',
-      electric: 'Électrique',
-      rating: 'Note (0-5)',
-      image_url: 'URL de l\'image',
-      num_reviews: 'Nombre d\'avis',
-      student_friendly: 'Adapté aux étudiants (30% de réduction)',
+      status: 'Statut',
+      student_friendly: 'Adapté Étudiants',
+      image_url: 'URL Image',
+      description: 'Description',
+      color: 'Couleur',
+      license_plate: 'Plaque d\'Immatriculation',
+      mileage: 'Kilométrage',
       update: 'Mettre à jour',
       create: 'Créer',
       cancel: 'Annuler',
@@ -614,19 +636,16 @@ export function AppProvider({ children }) {
 
   // ─── Notifications ──────────────────────────────────────────────────────────
 
-  // Ajouter une notif locale (pour les actions frontend)
   const addNotification = useCallback((notif) => {
     setNotifications(prev => [{ id: Date.now(), ...notif, time: 'just now', read: false }, ...prev])
   }, [])
 
-  // Fetch depuis l'API backend
   const fetchNotifications = useCallback(async () => {
     if (!localStorage.getItem('token')) return
     setNotifLoading(true)
     try {
       const res = await api.get('/notifications')
       const data = res.data.data || res.data
-      // Mapper les champs backend → format local
       const mapped = data.map(n => ({
         id: n.id,
         type: n.type,
@@ -638,7 +657,6 @@ export function AppProvider({ children }) {
       }))
       setNotifications(mapped)
     } catch (error) {
-      // Silencieux — pas critique
       console.error('Error fetching notifications:', error)
     } finally {
       setNotifLoading(false)
@@ -691,19 +709,22 @@ export function AppProvider({ children }) {
     try {
       await api.patch(`/bookings/${bookingId}/cancel`)
       setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b))
-      // La notif vient du backend via fetchNotifications, mais on l'ajoute aussi localement
       addNotification({ type: 'cancellation', message: `Booking #${bookingId} cancelled` })
     } catch (error) {
       console.error('Error cancelling booking:', error)
     }
   }, [addNotification])
 
+  // ✅ Fixed: after creating a booking, re-fetch notifications so the manager
+  // notification (sent by BookingController) appears immediately for the client too
   const createBooking = useCallback(async (data) => {
     const res = await api.post('/bookings', data)
     const newB = res.data.data || res.data
     setBookings(prev => [newB, ...prev])
+    // Re-fetch notifications to pick up any server-side notifications
+    fetchNotifications()
     return newB
-  }, [])
+  }, [fetchNotifications])
 
   // ─── Profile ────────────────────────────────────────────────────────────────
 
@@ -726,6 +747,7 @@ export function AppProvider({ children }) {
   // ─── Auth ───────────────────────────────────────────────────────────────────
 
   const login = useCallback(async (email, password) => {
+    // ✅ This will throw on 401 — the interceptor now won't redirect for /login
     const res = await api.post('/login', { email, password })
     const { token, user: userData } = res.data
     localStorage.setItem('token', token)
@@ -752,6 +774,15 @@ export function AppProvider({ children }) {
       fetchNotifications()
     }
   }, [isLoggedIn, fetchCars, fetchBookings, fetchNotifications])
+
+  // ✅ Poll notifications every 30s for managers (to pick up new booking notifications)
+  useEffect(() => {
+    if (!isLoggedIn) return
+    const interval = setInterval(() => {
+      fetchNotifications()
+    }, 30_000)
+    return () => clearInterval(interval)
+  }, [isLoggedIn, fetchNotifications])
 
   const unreadCount = notifications.filter(n => !n.read).length
 

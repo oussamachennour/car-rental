@@ -14,7 +14,6 @@ function NotificationDropdown({ notifications, unreadCount, markAllRead, clearNo
 
   return (
     <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-stone-900 rounded-xl shadow-xl border border-stone-200 dark:border-stone-700 z-50 overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100 dark:border-stone-800">
         <span className="font-semibold text-sm text-stone-900 dark:text-stone-100">
           {t.admin.notifications}
@@ -37,17 +36,12 @@ function NotificationDropdown({ notifications, unreadCount, markAllRead, clearNo
           )}
         </div>
       </div>
-
-      {/* List */}
       <div className="max-h-72 overflow-y-auto">
         {notifications.length === 0 ? (
           <div className="py-8 text-center text-sm text-stone-400">{t.admin.no_notifications}</div>
         ) : (
           notifications.map(n => (
-            <div
-              key={n.id}
-              className={`flex items-start gap-3 px-4 py-3 border-b border-stone-50 dark:border-stone-800 last:border-0 ${!n.read ? 'bg-orange-50/60 dark:bg-orange-950/20' : ''}`}
-            >
+            <div key={n.id} className={`flex items-start gap-3 px-4 py-3 border-b border-stone-50 dark:border-stone-800 last:border-0 ${!n.read ? 'bg-orange-50/60 dark:bg-orange-950/20' : ''}`}>
               <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs ${notiColors[n.type] || 'bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400'}`}>
                 {notiEmoji[n.type] || notiEmoji.default}
               </div>
@@ -64,19 +58,15 @@ function NotificationDropdown({ notifications, unreadCount, markAllRead, clearNo
   )
 }
 
-// Composant lien actif
 function NavLink({ to, children }) {
   const { pathname } = useLocation()
   const active = pathname === to || (to !== '/' && pathname.startsWith(to))
   return (
-    <Link
-      to={to}
-      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-        active
-          ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/30'
-          : 'text-stone-600 dark:text-stone-400 hover:text-orange-600 hover:bg-stone-100 dark:hover:bg-stone-800'
-      }`}
-    >
+    <Link to={to} className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+      active
+        ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/30'
+        : 'text-stone-600 dark:text-stone-400 hover:text-orange-600 hover:bg-stone-100 dark:hover:bg-stone-800'
+    }`}>
       {children}
     </Link>
   )
@@ -100,7 +90,6 @@ export default function Navbar() {
     navigate('/')
   }
 
-  // Fermer le dropdown en cliquant à l'extérieur
   useEffect(() => {
     const handler = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false)
@@ -109,40 +98,30 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // ─── Navbar non connecté ───────────────────────────────────────────────────
+  // ─── Non connecté ──────────────────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
       <nav className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
                 <Car size={18} className="text-white" />
               </div>
-              <span className="font-bold text-lg text-stone-900 dark:text-stone-100">
-                Car<span className="text-orange-600">Rent</span>
-              </span>
+              <span className="font-bold text-lg text-stone-900 dark:text-stone-100">Car<span className="text-orange-600">Rent</span></span>
             </Link>
-
-            {/* Actions */}
             <div className="flex items-center gap-2">
-              <Link to="/login" className="px-3 py-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-orange-600 rounded-lg transition-colors">
-                {t.nav.signIn}
-              </Link>
-
-              {/* Theme */}
               <button onClick={toggleTheme} className="p-2 text-stone-600 dark:text-stone-400 hover:text-orange-600 rounded-lg transition-colors">
                 {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
               </button>
-
-              {/* Lang — une seule fois */}
               <button onClick={toggleLang} className="px-2 py-1 text-sm font-bold text-stone-600 dark:text-stone-400 hover:text-orange-600 rounded-lg transition-colors">
-                {lang === 'en' ? '🇫🇷 FR' : '🇬🇧 EN'}
+                {lang === 'en' ? '🇫🇷' : '🇬🇧'}
               </button>
-
+              <Link to="/login" className="px-3 py-2 text-sm font-medium text-stone-600 dark:text-stone-400 hover:text-orange-600 rounded-lg transition-colors">
+                {t.nav.signIn}
+              </Link>
               <Link to="/register" className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors">
-                Sign Up
+                {t.nav.sign_up}
               </Link>
             </div>
           </div>
@@ -151,70 +130,56 @@ export default function Navbar() {
     )
   }
 
-  // ─── Navbar connecté ──────────────────────────────────────────────────────
+  // ─── Connecté ──────────────────────────────────────────────────────────────
   return (
     <nav className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
               <Car size={18} className="text-white" />
             </div>
-            <span className="font-bold text-lg text-stone-900 dark:text-stone-100">
-              Car<span className="text-orange-600">Rent</span>
-            </span>
+            <span className="font-bold text-lg text-stone-900 dark:text-stone-100">Car<span className="text-orange-600">Rent</span></span>
           </Link>
 
-          {/* Navigation links */}
           <div className="flex items-center gap-0.5">
+            {/* Fleet visible for all */}
+            <NavLink to="/fleet">{t.nav.fleet}</NavLink>
 
-            {/* Liens communs — seulement pour les clients */}
+            {/* Client-only links */}
             {!isManager && (
-              <>
-                <NavLink to="/fleet">{t.nav.fleet}</NavLink>
-                <NavLink to="/bookings">{t.nav.bookings}</NavLink>
-              </>
+              <NavLink to="/bookings">{t.nav.bookings}</NavLink>
             )}
 
-            {/* Liens communs pour tout le monde */}
-            {isManager && (
-              <NavLink to="/fleet">{t.nav.fleet}</NavLink>
-            )}
-
-            {/* Liens manager */}
+            {/* Manager links */}
             {isManager && (
               <>
                 <NavLink to="/dashboard">{t.nav.dashboard}</NavLink>
                 <NavLink to="/reservations">{t.nav.reservations}</NavLink>
                 <NavLink to="/users">{t.nav.users}</NavLink>
                 <NavLink to="/cars">{t.nav.fleet_mgmt}</NavLink>
+                {/* ✅ Documents link for managers */}
+                <NavLink to="/documents">
+                  {lang === 'fr' ? 'Documents' : 'Documents'}
+                </NavLink>
               </>
             )}
 
-            {/* Profil — prénom de l'utilisateur */}
             <NavLink to="/profile">
-              {user?.name?.split(' ')[0] || t.nav.profile}
+              Profile
             </NavLink>
 
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-stone-600 dark:text-stone-400 hover:text-orange-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors"
-            >
+            {/* Theme */}
+            <button onClick={toggleTheme} className="p-2 text-stone-600 dark:text-stone-400 hover:text-orange-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors">
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
 
-            {/* Lang toggle — une seule fois */}
-            <button
-              onClick={toggleLang}
-              className="px-2 py-2 text-sm font-bold text-stone-600 dark:text-stone-400 hover:text-orange-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors"
-            >
+            {/* Lang */}
+            <button onClick={toggleLang} className="px-2 py-2 text-sm font-bold text-stone-600 dark:text-stone-400 hover:text-orange-600 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors">
               {lang === 'en' ? '🇫🇷' : '🇬🇧'}
             </button>
 
-            {/* 🔔 Notification Bell */}
+            {/* 🔔 Notifications */}
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setShowNotifs(p => !p)}
@@ -227,7 +192,6 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
-
               {showNotifs && (
                 <NotificationDropdown
                   notifications={notifications}
@@ -247,7 +211,6 @@ export default function Navbar() {
               <LogOut size={15} />
               {t.nav.logout}
             </button>
-
           </div>
         </div>
       </div>

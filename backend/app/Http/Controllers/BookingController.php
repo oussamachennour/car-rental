@@ -12,9 +12,8 @@ class BookingController extends Controller
 {
     /**
      * GET /api/bookings
-     * - Manager  → toutes les réservations
-     * - Client   → seulement ses réservations
-     * - Non auth → 401 (route protégée auth:sanctum)
+     * - Manager  → all bookings
+     * - Client   → own bookings only
      */
     public function index(Request $request): JsonResponse
     {
@@ -25,7 +24,6 @@ class BookingController extends Controller
             'car:id,make,model,image_url,price_per_day'
         ])->latest();
 
-        // Si client → filtrer par user_id, si manager → tout afficher
         if ($user->role !== 'manager') {
             $query->where('user_id', $user->id);
         }
@@ -53,6 +51,7 @@ class BookingController extends Controller
 
     /**
      * POST /api/bookings
+     * ✅ Fixed: notify managers when a new booking is created
      */
     public function store(Request $request): JsonResponse
     {
@@ -60,13 +59,13 @@ class BookingController extends Controller
         $return = date('Y-m-d H:i:s', strtotime($request->input('return_date', now()->addDays(3))));
 
         $booking = new Booking();
-        $booking->user_id       = $request->user()->id;
-        $booking->car_id        = (int) $request->input('car_id');
-        $booking->pickup_date   = $pickup;
-        $booking->return_date   = $return;
-        $booking->total_price   = (double) $request->input('total_price', 100);
-        $booking->notes         = $request->input('notes', 'Réservation depuis React');
-        $booking->status        = 'active';
+        $booking->user_id          = $request->user()->id;
+        $booking->car_id           = (int) $request->input('car_id');
+        $booking->pickup_date      = $pickup;
+        $booking->return_date      = $return;
+        $booking->total_price      = (double) $request->input('total_price', 100);
+        $booking->notes            = $request->input('notes', 'Booking from React');
+        $booking->status           = 'active';
         $booking->discount_applied = false;
         $booking->discount_amount  = 0;
         $booking->save();
@@ -75,6 +74,17 @@ class BookingController extends Controller
         if ($car) {
             $car->update(['status' => 'rented']);
         }
+
+        // ✅ Notify managers of the new booking
+        $user = $request->user();
+        $carLabel = $car ? "{$car->make} {$car->model}" : "car #{$booking->car_id}";
+
+        Notification::notifyManagers(
+            'new_booking',
+            'New Booking',
+            "{$user->name} created a new booking for {$carLabel} (#{$booking->id}).",
+            ['booking_id' => $booking->id, 'user_id' => $user->id]
+        );
 
         return response()->json([
             'success' => true,
